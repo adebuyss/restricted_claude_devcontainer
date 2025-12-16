@@ -1,0 +1,35 @@
+# Allowed domains for Squid proxy
+# Format: one domain per line
+# Prefix with . to match all subdomains
+
+# GitHub
+.github.com
+.githubusercontent.com
+.githubassets.com
+
+# NPM Registry
+.npmjs.org
+.npmjs.com
+
+# PyPI
+.pypi.org
+.pythonhosted.org
+
+# VS Code
+.visualstudio.com
+vscode.blob.core.windows.net
+.code.visualstudio.com
+.vo.msecnd.net
+
+# Anthropic (API + OAuth)
+.anthropic.com
+claude.ai
+.claude.com
+
+# Sentry
+sentry.io
+
+
+# Statsig
+statsig.anthropic.com
+.statsig.com

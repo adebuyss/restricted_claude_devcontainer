@@ -1,0 +1,39 @@
+{
+  "name": "Claude Code (Proxy)",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "claude-code",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "Anthropic.claude-code",
+        "ms-python.python",
+        "charliermarsh.ruff"
+      ],
+      "settings": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash"
+          }
+        },
+        "http.proxy": "http://proxy:3128",
+        "http.proxyStrictSSL": true
+      }
+    }
+  },
+  "remoteEnv": {
+    "HTTP_PROXY": "http://proxy:3128",
+    "HTTPS_PROXY": "http://proxy:3128",
+    "http_proxy": "http://proxy:3128",
+    "https_proxy": "http://proxy:3128",
+    "NO_PROXY": "localhost,127.0.0.1,.local,proxy",
+    "no_proxy": "localhost,127.0.0.1,.local,proxy"
+  },
+  "postCreateCommand": "echo 'Proxy restrictions active. All traffic routes through Squid proxy.' && echo 'Test: curl https://example.com (should fail)'",
+  "shutdownAction": "stopCompose",
+  "remoteUser": "node"
+}

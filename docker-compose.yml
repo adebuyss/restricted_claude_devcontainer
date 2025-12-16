@@ -1,0 +1,98 @@
+services:
+  # ============================================
+  # SQUID PROXY - Gateway to the internet
+  # ============================================
+  proxy:
+    build: ./.proxy
+    container_name: claude-proxy
+    # Enable iptables hardening inside proxy container
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    networks:
+      - internal    # Can communicate with claude-code
+      - external    # Has internet access
+    environment:
+      # Pass through corporate proxy settings from host
+      # Supports: http://host:port or http://user:pass@host:port
+      - UPSTREAM_PROXY=${HTTP_PROXY:-${http_proxy:-}}
+      # Alternative: separate credentials
+      - UPSTREAM_PROXY_USER=${UPSTREAM_PROXY_USER:-}
+      - UPSTREAM_PROXY_PASS=${UPSTREAM_PROXY_PASS:-}
+      # Anthropic API key for credential isolation (optional)
+      # If set, the proxy injects the key so it never enters the Claude container
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "-x", "http://localhost:3128", "-o", "/dev/null", "http://pypi.org"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+    # Uncomment to expose for debugging:
+    # ports:
+    #   - "3128:3128"
+
+  # ============================================
+  # CLAUDE CODE CONTAINER - Isolated, proxy-only access
+  # ============================================
+  claude-code:
+    build: ./.devcontainer
+    container_name: claude-devcontainer
+    hostname: claude-devcontainer
+    # NO special capabilities - this container is restricted
+    networks:
+      - internal    # ONLY internal network - NO direct internet access
+    depends_on:
+      proxy:
+        condition: service_healthy
+    environment:
+      # HTTP/HTTPS proxy configuration (points to our Squid proxy)
+      - HTTP_PROXY=http://proxy:3128
+      - HTTPS_PROXY=http://proxy:3128
+      - http_proxy=http://proxy:3128
+      - https_proxy=http://proxy:3128
+      - NO_PROXY=localhost,127.0.0.1,.local,proxy
+      - no_proxy=localhost,127.0.0.1,.local,proxy
+      # npm proxy
+      - npm_config_proxy=http://proxy:3128
+      - npm_config_https_proxy=http://proxy:3128
+      # pip proxy (uses HTTPS_PROXY automatically)
+      # Anthropic API via proxy (for credential isolation with API key)
+      # Uncomment if using API key instead of OAuth:
+      # - ANTHROPIC_BASE_URL=http://proxy:3129
+      # Node.js settings
+      - NODE_OPTIONS=--max-old-space-size=4096
+      # Devcontainer flag
+      - DEVCONTAINER=true
+    volumes:
+      - claude-history:/commandhistory
+      - claude-config:/home/node/.claude
+      - .:/workspace:cached,Z
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    # Keep container running
+    command: sleep infinity
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  # Internal network - containers can communicate, NO internet
+  internal:
+    driver: bridge
+    internal: true   # KEY: This prevents direct internet access
+
+  # External network - has internet access (proxy only)
+  external:
+    driver: bridge
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  claude-history:
+    name: claude-proxy-history
+  claude-config:
+    name: claude-proxy-config
