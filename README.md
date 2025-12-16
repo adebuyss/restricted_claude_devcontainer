@@ -178,7 +178,7 @@ If `ANTHROPIC_API_KEY` is not set, the proxy passes requests through without mod
   - Configures iptables to DROP non-allowed traffic
 - Even if Squid is somehow bypassed, traffic is still filtered
 
-### Layer 4: Credential Isolation (Optional)
+### Layer 4: Credential Isolation (Optional) (untested)
 - API key lives only in the proxy container, never in Claude container
 - Anthropic API requests route through a dedicated proxy (port 3129)
 - The proxy injects the `x-api-key` header before forwarding to Anthropic
