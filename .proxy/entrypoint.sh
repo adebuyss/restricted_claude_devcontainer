@@ -110,7 +110,15 @@ generate_squid_config() {
     upstream_config=$(generate_upstream_config)
 
     # Replace placeholder in template
-    sed "s|# @@UPSTREAM_PROXY_CONFIG@@|$upstream_config|g" "$template" > "$output"
+    awk -v config="$upstream_config" '
+        /# @@UPSTREAM_PROXY_CONFIG@@/ {
+            if (config != "") {
+                print config
+            }
+            next
+        }
+        { print }
+    ' "$template" > "$output"
     cat /etc/squid/squid.conf
     log_info "Generated squid.conf"
 }

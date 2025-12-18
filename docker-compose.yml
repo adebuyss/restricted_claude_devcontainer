@@ -15,7 +15,8 @@ services:
     environment:
       # Pass through corporate proxy settings from host
       # Supports: http://host:port or http://user:pass@host:port
-      - UPSTREAM_PROXY=${HTTP_PROXY:-${http_proxy:-}}
+      # Set to empty to disable upstream proxy
+      - UPSTREAM_PROXY=${UPSTREAM_PROXY:-}
       # Alternative: separate credentials
       - UPSTREAM_PROXY_USER=${UPSTREAM_PROXY_USER:-}
       - UPSTREAM_PROXY_PASS=${UPSTREAM_PROXY_PASS:-}
